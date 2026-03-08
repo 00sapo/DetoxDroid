@@ -8,14 +8,19 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
+import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.ui.screens.feature.pause_button.PauseButtonFeatureSettingsSection
 import java.util.concurrent.TimeUnit
+
+val PauseButtonFeatureId: FeatureId = Feature.createId(PauseButtonFeature::class.java)
 
 /**
  * The [PauseButtonFeature] can be used to pause DetoxDroid for a defined amount of time. It will
@@ -30,8 +35,15 @@ import java.util.concurrent.TimeUnit
  * - by clicking the pause button in the quick settings tile (see [PauseTileService]), or
  *
  * - by setting DetoxDroid as default assistant app (see [PauseInteractionService]).
+ *
+ * Some apps can be configured as exceptions from the pause. These apps will still be blocked by
+ * [DisableAppsFeature] even when DetoxDroid is paused.
+ * @see appExceptions
  */
-object PauseButtonFeature : Feature() {
+object PauseButtonFeature : Feature(),
+    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(
+        PauseButtonFeatureId, AppExceptionListType.ONLY_LIST
+    ) {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_pause,
         subtitle = R.string.feature_pause_subtitle,
@@ -41,6 +53,13 @@ object PauseButtonFeature : Feature() {
     override val settingsContent: @Composable () -> Unit = {
         PauseButtonFeatureSettingsSection()
     }
+
+    /**
+     * The [PauseButtonFeature] only supports [AppExceptionListType.ONLY_LIST], as the exceptions
+     * are apps that should still be blocked even during a pause.
+     */
+    override val listTypes: List<AppExceptionListType>
+        get() = listOf(AppExceptionListType.ONLY_LIST)
 
     /**
      * The duration of the pause in milliseconds.

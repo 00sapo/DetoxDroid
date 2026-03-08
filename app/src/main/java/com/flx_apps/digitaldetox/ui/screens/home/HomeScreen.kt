@@ -63,6 +63,7 @@ import co.yml.charts.ui.piechart.models.PieChartData
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.features.AntiUninstallFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
@@ -76,7 +77,9 @@ import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.temporal.ChronoUnit
@@ -279,12 +282,22 @@ fun OpenFeatureTile(
 
 /**
  * A tile that uninstalls DetoxDroid when clicked. It is only shown if the device admin permission
- * is granted. A confirmation dialog is shown when before revoking the device admin permission.
+ * is granted. A confirmation dialog is shown before revoking the device admin permission.
+ * Shows a locked state when the anti-uninstall time lock is active.
  */
 @Composable
 fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
     // don't show the uninstall tile if the device admin permission is not granted
     if (!DetoxDroidDeviceAdminReceiver.isGranted(LocalContext.current)) return
+
+    // Compute lock state directly from the feature - always current
+    val isLocked = AntiUninstallFeature.isCurrentlyLocked()
+    val lockedUntilFormatted = if (isLocked) {
+        val dateTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(AntiUninstallFeature.lockedUntil), ZoneId.systemDefault()
+        )
+        dateTime.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT))
+    } else ""
 
     val showAreYouSureDialog = remember { MutableStateFlow(false) }
     if (showAreYouSureDialog.collectAsState().value) {
@@ -308,11 +321,13 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
     SimpleListTile(
         leadingIcon = Icons.Default.DeleteForever,
         titleText = stringResource(id = R.string.home_uninstall),
-        subtitleText = stringResource(
-            id = R.string.home_uninstall_hint
-        ),
+        subtitleText = if (isLocked) {
+            stringResource(id = R.string.home_uninstall_locked, lockedUntilFormatted)
+        } else {
+            stringResource(id = R.string.home_uninstall_hint)
+        },
         onClick = {
-            showAreYouSureDialog.value = true
+            if (!isLocked) showAreYouSureDialog.value = true
         })
     Divider()
 }

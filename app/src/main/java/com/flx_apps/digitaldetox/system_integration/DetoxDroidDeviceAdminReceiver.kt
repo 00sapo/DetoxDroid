@@ -4,6 +4,7 @@ import android.app.admin.DeviceAdminReceiver
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
+import com.flx_apps.digitaldetox.features.AntiUninstallFeature
 
 class DetoxDroidDeviceAdminReceiver : DeviceAdminReceiver() {
     companion object {
@@ -13,7 +14,12 @@ class DetoxDroidDeviceAdminReceiver : DeviceAdminReceiver() {
             ) == true
         }
 
+        /**
+         * Revokes the device admin / device owner permission.
+         * Does nothing if the anti-uninstall time lock is currently active.
+         */
         fun revokePermission(context: Context) {
+            if (AntiUninstallFeature.isCurrentlyLocked()) return
             (context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager?)?.clearDeviceOwnerApp(
                 context.packageName
             )

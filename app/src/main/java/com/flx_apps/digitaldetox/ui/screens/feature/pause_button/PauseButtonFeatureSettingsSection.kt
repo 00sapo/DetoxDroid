@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
+import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.KeyEventUtil
@@ -52,9 +53,21 @@ fun PauseButtonFeatureSettingsSection(
     }
     PauseDurationTile()
     MinimumTimeBetweenPausesTile()
+    PauseExceptionsTile()
     NotificationSettingsTile()
     PauseFromAssistantTile()
     PauseFromHardwareButtonTile()
+}
+
+/**
+ * A tile that opens the app exceptions screen for the pause feature.
+ * Apps listed here will still be blocked by DisableAppsFeature even when DetoxDroid is paused.
+ */
+@Composable
+private fun PauseExceptionsTile() {
+    OpenAppExceptionsTile(
+        titleText = stringResource(id = R.string.feature_pause_exceptions),
+    )
 }
 
 /**

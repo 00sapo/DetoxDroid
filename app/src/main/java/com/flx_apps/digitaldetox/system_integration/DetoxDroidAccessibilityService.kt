@@ -13,6 +13,7 @@ import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
@@ -137,7 +138,13 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * occurs. It forwards the event to the [FeaturesProvider.activeFeatures] for processing.
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
-        if (PauseButtonFeature.isPausing()) return
+        if (PauseButtonFeature.isPausing()) {
+            // Even during a pause, apps listed as exceptions from pause should still be blocked.
+            if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                handlePauseExceptionEvent(accessibilityEvent)
+            }
+            return
+        }
 
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
             handleScrollEvent(accessibilityEvent)
@@ -201,6 +208,22 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             PauseButtonFeature.togglePause(this)
         }
         return super.onKeyEvent(event)
+    }
+
+    /**
+     * Called when DetoxDroid is paused but an app opens that is listed as a pause exception.
+     * In this case, [DisableAppsFeature] will still be applied to block the app even during pause.
+     * @see PauseButtonFeature.appExceptions
+     */
+    private fun handlePauseExceptionEvent(accessibilityEvent: AccessibilityEvent) {
+        val packageName = accessibilityEvent.packageName?.toString() ?: return
+        if (packageName == lastPackage) return
+        if (ignoredEventClasses.contains(accessibilityEvent.className) || ignoredPackages.contains(packageName)) return
+        if (!PauseButtonFeature.appExceptions.contains(packageName)) return
+        lastPackage = packageName
+        if (DisableAppsFeature.isActive()) {
+            DisableAppsFeature.onAppOpened(this, packageName, accessibilityEvent)
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.features.AntiUninstallFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
@@ -119,8 +120,12 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Stops DetoxDroid and all running features, revokes the device admin permission and uninstalls.
+     * Returns false if uninstall is blocked by the anti-uninstall time lock.
      */
-    fun uninstallDetoxDroid() {
+    fun uninstallDetoxDroid(): Boolean {
+        if (AntiUninstallFeature.isCurrentlyLocked()) {
+            return false
+        }
         // call onDestroy() manually to run all cleanup tasks (e.g. stop all features) in a blocking way
         // (as application.stopService() is asynchronous)
         DetoxDroidAccessibilityService.instance?.onDestroy()
@@ -130,5 +135,6 @@ class HomeViewModel @Inject constructor(
         intent.data = "package:${application.packageName}".toUri()
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         application.startActivity(intent)
+        return true
     }
 }
