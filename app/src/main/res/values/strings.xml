@@ -87,6 +87,19 @@
     <string name="feature.pause.fromHardwareButton.appNotRunning">DetoxDroid has to be running in order to assign a new hardware button.</string>
     <string name="feature.pause.notification.settings">Foreground Notification</string>
     <string name="feature.pause.notification.settings.description">Configure notification with pause button. Grant notification permission to enable.</string>
+    <string name="feature.pause.exceptions">Exceptions from Pause</string>
+    <string name="feature.pause.exceptions.description">Apps listed here will still be blocked even when DetoxDroid is paused.</string>
+
+    <string name="feature.antiUninstall">Anti-Uninstall Protection</string>
+    <string name="feature.antiUninstall.subtitle">Lock DetoxDroid in place</string>
+    <string name="feature.antiUninstall.description">Prevent DetoxDroid from being uninstalled until a configured date. Once a time lock is set, you cannot uninstall DetoxDroid until the lock expires — keeping you accountable to your own rules.</string>
+    <string name="feature.antiUninstall.lock">Time-Based Uninstall Lock</string>
+    <string name="feature.antiUninstall.lock.lockedUntil">Locked until %s</string>
+    <string name="feature.antiUninstall.lock.notLocked">No lock set. Tap to set a lock duration.</string>
+    <string name="feature.antiUninstall.setLock">Set Lock Duration</string>
+    <string name="feature.antiUninstall.setLock.days">%d day(s)</string>
+
+    <string name="home.uninstall.locked">Uninstall is locked until %s</string>
 
     <string name="feature.doomScrolling">Break "Infinite Scrolling"</string>
     <string name="feature.doomScrolling.subtitle">Don\'t get lost in obsessive checking behaviors</string>
