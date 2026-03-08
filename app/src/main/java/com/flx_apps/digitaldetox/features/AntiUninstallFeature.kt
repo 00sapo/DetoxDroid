@@ -12,7 +12,6 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.ui.screens.feature.anti_uninstall.AntiUninstallFeatureSettingsSection
-import java.util.concurrent.TimeUnit
 
 val AntiUninstallFeatureId: FeatureId = Feature.createId(AntiUninstallFeature::class.java)
 
@@ -63,7 +62,7 @@ object AntiUninstallFeature : Feature() {
     /**
      * Returns whether the time-based uninstall protection lock is currently active.
      */
-    fun isCurrentlyLocked(): Boolean = _isActivated && System.currentTimeMillis() < lockedUntil
+    fun isCurrentlyLocked(): Boolean = AntiUninstallLock.isLocked(_isActivated, lockedUntil)
 
     /**
      * Sets the lock to expire after the given number of days from now.
@@ -72,6 +71,6 @@ object AntiUninstallFeature : Feature() {
      */
     fun setLockForDays(days: Int) {
         if (isCurrentlyLocked()) return
-        lockedUntil = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(days.toLong())
+        lockedUntil = AntiUninstallLock.expiryForDays(days)
     }
 }
